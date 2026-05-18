@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="독서트래커"/>
+<meta name="theme-color" content="#C8A96E"/>
+<link rel="manifest" href="manifest.json"/>
+<title>버핏 독서 트래커</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap');
+
+  :root {
+    --bg: #0F0E0A;
+    --bg2: #1A1710;
+    --bg3: #131210;
+    --border: #2A2720;
+    --gold: #C8A96E;
+    --gold2: #E8C87E;
+    --text: #E8DFC8;
+    --text2: #A09070;
+    --text3: #7A7060;
+    --text4: #5A5040;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Serif KR', serif;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    padding-bottom: calc(80px + var(--safe-bottom));
+  }
+
+  /* HEADER */
+  .header {
+    background: linear-gradient(135deg, #1A1710 0%, #0F0E0A 100%);
+    border-bottom: 1px solid var(--border);
+    padding: calc(var(--safe-top) + 20px) 22px 18px;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .header-row { display:flex; align-items:flex-start; justify-content:space-between; }
+  .header-label { font-size:10px; letter-spacing:4px; color:var(--gold); text-transform:uppercase; margin-bottom:5px; font-family:'Playfair Display', serif; }
+  .header-title { font-size:21px; font-weight:400; color:var(--text); font-family:'Playfair Display', serif; }
+  .header-mins { text-align:right; }
+  .header-mins-num { font-size:30px; font-weight:600; color:var(--gold); line-height:1; font-family:'Playfair Display', serif; }
+  .header-mins-label { font-size:10px; color:var(--text4); letter-spacing:1px; margin-top:3px; }
+  .progress-bar-bg { margin-top:14px; background:var(--bg2); border-radius:2px; height:3px; overflow:hidden; }
+  .progress-bar-fill { height:100%; background:linear-gradient(90deg, var(--gold), var(--gold2)); border-radius:2px; transition:width 0.6s ease; }
+  .progress-label { margin-top:6px; font-size:11px; color:var(--text4); }
+
+  /* TABS */
+  .tabs {
+    display:flex; border-bottom:1px solid var(--border);
+    background:var(--bg); position:sticky; top:var(--header-h,110px); z-index:99;
+  }
+  .tab-btn {
+    flex:1; padding:13px 0; font-size:12px;
+    background:none; border:none; cursor:pointer;
+    color:var(--text4); border-bottom:2px solid transparent;
+    transition:all 0.2s; font-family:'Noto Serif KR', serif;
+    letter-spacing:0.5px;
+  }
+  .tab-btn.active { color:var(--gold); border-bottom-color:var(--gold); }
+
+  /* CONTENT */
+  .content { padding:22px 18px; }
+
+  /* SECTION LABEL */
+  .sec-label { font-size:10px; letter-spacing:3px; color:var(--gold); text-transform:uppercase; margin-bottom:14px; font-family:'Playfair Display', serif; }
+
+  /* INPUT */
+  input, textarea {
+    display:block; width:100%;
+    background:var(--bg3); border:1px solid var(--border);
+    color:var(--text); padding:11px 13px; font-size:14px;
+    border-radius:5px; font-family:'Noto Serif KR', serif;
+    outline:none; transition:border-color 0.2s;
+  }
+  input:focus, textarea:focus { border-color:var(--gold); }
+  textarea { resize:none; }
+  ::placeholder { color:var(--text4); }
+
+  /* SESSION CARDS */
+  .session-card {
+    display:flex; align-items:center;
+    background:var(--bg3); border:1px solid var(--border);
+    border-radius:7px; padding:15px; margin-bottom:11px;
+    cursor:pointer; transition:all 0.25s; user-select:none;
+    -webkit-user-select:none;
+  }
+  .session-card.done {
+    background:#1E1C12; border-color:var(--gold);
+    box-shadow:0 0 14px rgba(200,169,110,0.1);
+  }
+  .check-circle {
+    width:28px; height:28px; border-radius:50%;
+    border:2px solid #3A3528; background:transparent;
+    display:flex; align-items:center; justify-content:center;
+    font-size:13px; flex-shrink:0; transition:all 0.25s; color:var(--bg);
+  }
+  .session-card.done .check-circle { background:var(--gold); border-color:var(--gold); }
+  .session-info { margin-left:13px; flex:1; }
+  .session-name { font-size:15px; color:var(--text3); transition:color 0.2s; }
+  .session-card.done .session-name { color:var(--text); }
+  .session-meta { font-size:11px; color:var(--text4); margin-top:3px; }
+  .session-done-tag { font-size:10px; color:var(--gold); letter-spacing:1px; }
+
+  /* QUOTE */
+  .quote-box {
+    margin-top:26px; background:var(--bg3);
+    border:1px solid var(--border); border-left:3px solid var(--gold);
+    border-radius:5px; padding:16px 17px;
+  }
+  .quote-text { font-size:13px; color:var(--text2); line-height:1.75; font-style:italic; font-family:'Playfair Display', serif; }
+  .quote-author { font-size:10px; color:var(--text4); margin-top:9px; letter-spacing:1px; }
+
+  /* QUESTION BOX */
+  .question-box { background:var(--bg2); border:1px solid var(--border); border-radius:7px; padding:17px; margin-top:22px; }
+  .question-text { font-size:14px; color:var(--text); line-height:1.65; }
+  .question-btn {
+    margin-top:13px; background:none; border:1px solid #3A3528;
+    color:var(--text3); font-size:11px; padding:7px 13px;
+    border-radius:3px; cursor:pointer; font-family:'Noto Serif KR', serif;
+    transition:border-color 0.2s;
+  }
+  .question-btn:hover { border-color:var(--gold); color:var(--gold); }
+
+  /* WEEK GRID */
+  .week-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:7px; margin-bottom:26px; }
+  .week-cell { text-align:center; }
+  .week-day-label { font-size:10px; color:var(--text4); margin-bottom:7px; }
+  .week-day-label.today { color:var(--gold); }
+  .week-bar {
+    height:42px; border-radius:4px; background:var(--bg2);
+    border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center;
+    font-size:11px; color:#3A3020; transition:background 0.3s;
+  }
+  .week-bar.done1 { background:#3A3020; color:var(--text); }
+  .week-bar.done2 { background:#7A6A40; color:var(--text); }
+  .week-bar.done3 { background:var(--gold); color:var(--bg); font-weight:600; }
+  .week-bar.today-border { border-color:var(--gold); }
+
+  /* STATS GRID */
+  .stats-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:26px; }
+  .stat-card { background:var(--bg2); border:1px solid var(--border); border-radius:6px; padding:15px; }
+  .stat-num { font-size:26px; font-weight:600; color:var(--gold); font-family:'Playfair Display', serif; line-height:1; }
+  .stat-label { font-size:10px; color:var(--text4); margin-top:5px; letter-spacing:0.5px; }
+
+  /* CATEGORY BARS */
+  .cat-row { margin-bottom:11px; }
+  .cat-header { display:flex; justify-content:space-between; margin-bottom:5px; }
+  .cat-name { font-size:12px; color:var(--text2); }
+  .cat-pct { font-size:11px; }
+  .cat-track { background:var(--bg2); border-radius:2px; height:4px; }
+  .cat-fill { height:100%; border-radius:2px; transition:width 1s ease; }
+
+  /* MEMO */
+  .memo-form { background:var(--bg2); border:1px solid var(--border); border-radius:7px; padding:17px; margin-bottom:22px; }
+  .memo-field { margin-bottom:13px; }
+  .memo-field-label { font-size:10px; color:var(--text3); margin-bottom:6px; letter-spacing:1px; }
+  .save-btn {
+    width:100%; background:var(--gold); border:none;
+    color:var(--bg); padding:13px; font-size:14px;
+    border-radius:5px; cursor:pointer; font-family:'Noto Serif KR', serif;
+    font-weight:600; letter-spacing:1px; transition:opacity 0.2s;
+  }
+  .save-btn:active { opacity:0.85; }
+  .memo-card { background:var(--bg3); border:1px solid var(--border); border-radius:6px; padding:15px; margin-bottom:11px; }
+  .memo-card-header { display:flex; justify-content:space-between; margin-bottom:9px; align-items:center; }
+  .memo-card-book { font-size:13px; color:var(--gold); }
+  .memo-card-date { font-size:10px; color:var(--text4); }
+  .memo-line { font-size:12px; color:var(--text2); line-height:1.6; margin-bottom:5px; }
+  .empty-state { color:var(--text4); font-size:13px; text-align:center; padding:32px 0; }
+
+  /* GUIDE */
+  .principle-card { background:var(--bg2); border:1px solid var(--border); border-radius:6px; padding:17px; margin-bottom:11px; }
+  .principle-title { font-size:15px; color:var(--text); margin-bottom:7px; font-family:'Playfair Display', serif; }
+  .principle-desc { font-size:12px; color:var(--text3); line-height:1.75; }
+  .question-list-item { display:flex; align-items:flex-start; gap:11px; padding:12px 0; border-bottom:1px solid #1A1710; }
+  .q-num { width:21px; height:21px; border-radius:50%; background:var(--bg2); display:flex; align-items:center; justify-content:center; font-size:10px; color:var(--gold); flex-shrink:0; margin-top:2px; }
+  .q-text { font-size:13px; color:var(--text2); line-height:1.65; }
+  .book-row { display:flex; align-items:center; justify-content:space-between; padding:13px 0; border-bottom:1px solid #1A1710; }
+  .book-title { font-size:14px; color:var(--text); font-family:'Playfair Display', serif; }
+  .book-author { font-size:11px; color:var(--text4); margin-top:2px; }
+  .book-tag { font-size:10px; color:var(--gold); border:1px solid #3A3020; border-radius:3px; padding:3px 8px; white-space:nowrap; }
+
+  /* BOOK INPUT */
+  .book-input-wrap { margin-bottom:22px; }
+
+  /* INSTALL BANNER */
+  .install-banner {
+    display:none; position:fixed; bottom:calc(72px + var(--safe-bottom)); left:12px; right:12px;
+    background:var(--bg2); border:1px solid var(--gold); border-radius:8px;
+    padding:14px 16px; z-index:200; align-items:center; gap:12px;
+    box-shadow:0 4px 20px rgba(0,0,0,0.5);
+  }
+  .install-banner.show { display:flex; }
+  .install-text { flex:1; font-size:12px; color:var(--text2); line-height:1.5; }
+  .install-btn {
+    background:var(--gold); border:none; color:var(--bg);
+    padding:8px 14px; border-radius:4px; font-size:12px;
+    cursor:pointer; font-family:'Noto Serif KR', serif; white-space:nowrap;
+  }
+  .install-close { background:none; border:none; color:var(--text4); font-size:18px; cursor:pointer; padding:0 4px; }
+
+  /* NAV DOTS (tab indicator) */
+  .tab-page { display:none; }
+  .tab-page.active { display:block; }
+
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+  .content { animation:fadeIn 0.3s ease; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header" id="mainHeader">
+  <div class="header-row">
+    <div>
+      <div class="header-label">Warren Buffett Reading System</div>
+      <div class="header-title">독서 루틴 트래커</div>
+    </div>
+    <div class="header-mins">
+      <div class="header-mins-num" id="todayMins">0</div>
+      <div class="header-mins-label">오늘 분</div>
+    </div>
+  </div>
+  <div class="progress-bar-bg">
+    <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+  </div>
+  <div class="progress-label" id="progressLabel">오늘 0/3 세션 완료</div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('today',this)">오늘</button>
+  <button class="tab-btn" onclick="switchTab('week',this)">이번 주</button>
+  <button class="tab-btn" onclick="switchTab('memo',this)">메모</button>
+  <button class="tab-btn" onclick="switchTab('guide',this)">가이드</button>
+</div>
+
+<!-- ===================== TODAY ===================== -->
+<div class="tab-page active" id="page-today">
+<div class="content">
+
+  <div class="book-input-wrap">
+    <div class="sec-label">현재 읽는 책</div>
+    <input type="text" id="currentBook" placeholder="책 제목을 입력하세요..." oninput="saveData()"/>
+  </div>
+
+  <div class="sec-label">오늘의 독서 세션</div>
+
+  <div class="session-card" id="card-morning" onclick="toggleSlot('morning')">
+    <div class="check-circle" id="chk-morning"></div>
+    <div class="session-info">
+      <div class="session-name">🌅 아침</div>
+      <div class="session-meta">뉴스 · 뉴스레터 · 15분</div>
+    </div>
+    <div class="session-done-tag" id="tag-morning"></div>
+  </div>
+
+  <div class="session-card" id="card-commute" onclick="toggleSlot('commute')">
+    <div class="check-circle" id="chk-commute"></div>
+    <div class="session-info">
+      <div class="session-name">🚇 출퇴근</div>
+      <div class="session-meta">전기 · 오디오북 · 35분</div>
+    </div>
+    <div class="session-done-tag" id="tag-commute"></div>
+  </div>
+
+  <div class="session-card" id="card-evening" onclick="toggleSlot('evening')">
+    <div class="check-circle" id="chk-evening"></div>
+    <div class="session-info">
+      <div class="session-name">🌙 저녁</div>
+      <div class="session-meta">핵심 정독 · 30분</div>
+    </div>
+    <div class="session-done-tag" id="tag-evening"></div>
+  </div>
+
+  <div class="quote-box">
+    <div class="quote-text">"지식은 복리로 쌓인다. 오늘의 독서가 내일의 판단을 만든다."</div>
+    <div class="quote-author">— Warren Buffett</div>
+  </div>
+
+  <div class="question-box">
+    <div class="sec-label" style="margin-bottom:10px;">오늘의 사고 질문</div>
+    <div class="question-text" id="questionText">❓ 이 내용의 핵심 전제는 무엇인가?</div>
+    <button class="question-btn" onclick="nextQuestion()">다음 질문 →</button>
+  </div>
+
+</div>
+</div>
+
+<!-- ===================== WEEK ===================== -->
+<div class="tab-page" id="page-week">
+<div class="content">
+
+  <div class="sec-label">이번 주 현황</div>
+  <div class="week-grid" id="weekGrid"></div>
+
+  <div class="stats-grid" id="statsGrid"></div>
+
+  <div class="sec-label">추천 독서 카테고리 비중</div>
+  <div id="catBars"></div>
+
+</div>
+</div>
+
+<!-- ===================== MEMO ===================== -->
+<div class="tab-page" id="page-memo">
+<div class="content">
+
+  <div class="sec-label">3줄 독서 메모</div>
+  <div class="memo-form">
+    <div class="memo-field">
+      <div class="memo-field-label">📌 핵심 사실/주장</div>
+      <textarea id="mFact" rows="2" placeholder="오늘 읽은 핵심 내용..."></textarea>
+    </div>
+    <div class="memo-field">
+      <div class="memo-field-label">💡 내가 얻은 인사이트</div>
+      <textarea id="mInsight" rows="2" placeholder="어떤 새로운 시각을 얻었나..."></textarea>
+    </div>
+    <div class="memo-field">
+      <div class="memo-field-label">🔗 업무/삶에 적용할 점</div>
+      <textarea id="mAction" rows="2" placeholder="구체적으로 어떻게 적용할까..."></textarea>
+    </div>
+    <button class="save-btn" onclick="saveMemo()">메모 저장</button>
+  </div>
+
+  <div class="sec-label" id="memoCountLabel">저장된 메모 (0)</div>
+  <div id="memoList"></div>
+
+</div>
+</div>
+
+<!-- ===================== GUIDE ===================== -->
+<div class="tab-page" id="page-guide">
+<div class="content">
+
+  <div class="sec-label">버핏식 독서 3원칙</div>
+
+  <div class="principle-card">
+    <div class="principle-title">📖 깊이 &gt; 양</div>
+    <div class="principle-desc">100권을 훑는 것보다 10권을 완전히 소화하는 것이 판단력을 바꾼다. 완독 체크에 집착하지 말것.</div>
+  </div>
+  <div class="principle-card">
+    <div class="principle-title">🔄 일관성 &gt; 강도</div>
+    <div class="principle-desc">하루 30분을 5년 유지하는 것이, 한 달 집중 독서보다 압도적으로 강력하다. 복리는 시간이 만든다.</div>
+  </div>
+  <div class="principle-card">
+    <div class="principle-title">⚡ 적용 &gt; 지식</div>
+    <div class="principle-desc">읽은 것을 업무와 삶에 연결하지 않으면 독서는 소비다. 적용할 때 비로소 투자가 된다.</div>
+  </div>
+
+  <div class="sec-label" style="margin-top:26px;">사고력 강화 질문 5가지</div>
+  <div id="questionList"></div>
+
+  <div class="sec-label" style="margin-top:26px;">추천 도서 목록</div>
+  <div id="bookList"></div>
+
+</div>
+</div>
+
+<!-- INSTALL BANNER -->
+<div class="install-banner" id="installBanner">
+  <div class="install-text">홈 화면에 추가하면<br>앱처럼 바로 실행됩니다</div>
+  <button class="install-btn" id="installBtn">설치하기</button>
+  <button class="install-close" onclick="document.getElementById('installBanner').classList.remove('show')">×</button>
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────
+const SLOTS = [
+  { id:'morning', mins:15 },
+  { id:'commute', mins:35 },
+  { id:'evening', mins:30 },
+];
+const QUESTIONS = [
+  "이 내용의 핵심 전제는 무엇인가?",
+  "저자가 틀렸다면 어디서 틀렸는가?",
+  "5년 후에도 이 관점은 유효할까?",
+  "나의 기존 생각과 어떻게 다른가?",
+  "이것을 업무에 당장 적용한다면?",
+];
+const CATEGORIES = [
+  { label:'업무/산업', color:'#C8A96E', pct:30 },
+  { label:'경제/투자', color:'#7EB8A0', pct:20 },
+  { label:'사고력/철학', color:'#A09BC8', pct:20 },
+  { label:'전기/자서전', color:'#C87E7E', pct:20 },
+  { label:'역사/고전', color:'#C8B87E', pct:10 },
+];
+const BOOKS = [
+  { title:'현명한 투자자', author:'벤저민 그레이엄', tag:'버핏 필독서' },
+  { title:'생각에 관한 생각', author:'다니엘 카너먼', tag:'사고력' },
+  { title:'가난한 찰리의 연감', author:'찰리 멍거', tag:'멘탈 모델' },
+  { title:'돈의 심리학', author:'모건 하우절', tag:'경제/투자' },
+  { title:'눈덩이', author:'앨리스 슈로더', tag:'버핏 전기' },
+  { title:'워런 버핏의 주주서한', author:'워런 버핏', tag:'1차 자료' },
+  { title:'어떻게 원하는 것을 얻는가', author:'스튜어트 다이아몬드', tag:'협상/설득' },
+];
+
+const DAYS = ['일','월','화','수','목','금','토'];
+
+// ── STATE ─────────────────────────────────────────
+let state = {
+  checked: {},      // "YYYY-MM-DD_slotId" → bool
+  savedMemos: [],   // [{date,book,fact,insight,action}]
+  currentBook: '',
+  questionIdx: 0,
+};
+let qIdx = 0;
+
+function todayKey() { return new Date().toISOString().slice(0,10); }
+
+function loadState() {
+  try {
+    const s = localStorage.getItem('buffett_v2');
+    if (s) state = {...state, ...JSON.parse(s)};
+  } catch(e) {}
+}
+function saveData() {
+  state.currentBook = document.getElementById('currentBook').value;
+  localStorage.setItem('buffett_v2', JSON.stringify(state));
+}
+
+// ── SLOTS ─────────────────────────────────────────
+function toggleSlot(id) {
+  const key = `${todayKey()}_${id}`;
+  state.checked[key] = !state.checked[key];
+  saveData();
+  renderToday();
+  renderWeek();
+}
+
+function renderToday() {
+  const today = todayKey();
+  let doneMins = 0, doneCount = 0;
+  SLOTS.forEach(s => {
+    const done = !!state.checked[`${today}_${s.id}`];
+    if (done) { doneMins += s.mins; doneCount++; }
+    const card = document.getElementById(`card-${s.id}`);
+    const chk  = document.getElementById(`chk-${s.id}`);
+    const tag  = document.getElementById(`tag-${s.id}`);
+    card.classList.toggle('done', done);
+    chk.textContent = done ? '✓' : '';
+    tag.textContent = done ? '완료' : '';
+  });
+  document.getElementById('todayMins').textContent = doneMins;
+  const pct = Math.round(doneCount/SLOTS.length*100);
+  document.getElementById('progressFill').style.width = pct+'%';
+  document.getElementById('progressLabel').textContent = `오늘 ${doneCount}/${SLOTS.length} 세션 완료`;
+  document.getElementById('currentBook').value = state.currentBook || '';
+}
+
+// ── QUESTION ──────────────────────────────────────
+function nextQuestion() {
+  qIdx = (qIdx + 1) % QUESTIONS.length;
+  document.getElementById('questionText').textContent = '❓ ' + QUESTIONS[qIdx];
+}
+
+// ── WEEK ──────────────────────────────────────────
+function renderWeek() {
+  const today = todayKey();
+  const now = new Date();
+  const weekStart = new Date(now);
+  weekStart.setDate(now.getDate() - now.getDay()); // Sunday
+
+  // Build 7 days (Sun→Sat)
+  const days = Array.from({length:7}, (_,i) => {
+    const d = new Date(weekStart);
+    d.setDate(weekStart.getDate() + i);
+    const key = d.toISOString().slice(0,10);
+    const done = SLOTS.filter(s => state.checked[`${key}_${s.id}`]).length;
+    return { label:DAYS[i], key, done, isToday: key===today };
+  });
+
+  // Week grid
+  const grid = document.getElementById('weekGrid');
+  grid.innerHTML = days.map(d => `
+    <div class="week-cell">
+      <div class="week-day-label ${d.isToday?'today':''}">${d.label}</div>
+      <div class="week-bar done${d.done} ${d.isToday?'today-border':''}">
+        ${d.done>0 ? d.done+'/3' : '·'}
+      </div>
+    </div>
+  `).join('');
+
+  const weekDone  = days.reduce((a,d)=>a+d.done,0);
+  const weekMins  = days.reduce((a,d)=>a+d.done*20,0);
+  const totalSessions = Object.values(state.checked).filter(Boolean).length;
+  const totalMins = totalSessions * 20;
+
+  document.getElementById('statsGrid').innerHTML = [
+    {label:'이번 주 완료 세션', value:weekDone, unit:'세션'},
+    {label:'이번 주 독서 시간', value:weekMins, unit:'분'},
+    {label:'저장된 메모',       value:state.savedMemos.length, unit:'개'},
+    {label:'누적 독서 시간',    value:totalMins, unit:'분'},
+  ].map(s=>`
+    <div class="stat-card">
+      <div class="stat-num">${s.value}</div>
+      <div class="stat-label">${s.unit} · ${s.label}</div>
+    </div>
+  `).join('');
+
+  // Category bars
+  document.getElementById('catBars').innerHTML = CATEGORIES.map(c=>`
+    <div class="cat-row">
+      <div class="cat-header">
+        <span class="cat-name">${c.label}</span>
+        <span class="cat-pct" style="color:${c.color}">${c.pct}%</span>
+      </div>
+      <div class="cat-track">
+        <div class="cat-fill" style="width:${c.pct}%;background:${c.color}"></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── MEMO ──────────────────────────────────────────
+function saveMemo() {
+  const fact    = document.getElementById('mFact').value.trim();
+  const insight = document.getElementById('mInsight').value.trim();
+  const action  = document.getElementById('mAction').value.trim();
+  if (!fact && !insight && !action) return;
+  state.savedMemos.unshift({
+    date: todayKey(),
+    book: state.currentBook || '',
+    fact, insight, action
+  });
+  state.savedMemos = state.savedMemos.slice(0,50);
+  document.getElementById('mFact').value = '';
+  document.getElementById('mInsight').value = '';
+  document.getElementById('mAction').value = '';
+  saveData();
+  renderMemos();
+}
+
+function renderMemos() {
+  const list = document.getElementById('memoList');
+  document.getElementById('memoCountLabel').textContent = `저장된 메모 (${state.savedMemos.length})`;
+  if (state.savedMemos.length === 0) {
+    list.innerHTML = '<div class="empty-state">첫 번째 메모를 작성해보세요</div>';
+    return;
+  }
+  list.innerHTML = state.savedMemos.map(m=>`
+    <div class="memo-card">
+      <div class="memo-card-header">
+        <span class="memo-card-book">${m.book || '제목 없음'}</span>
+        <span class="memo-card-date">${m.date}</span>
+      </div>
+      ${m.fact    ? `<div class="memo-line">📌 ${m.fact}</div>` : ''}
+      ${m.insight ? `<div class="memo-line">💡 ${m.insight}</div>` : ''}
+      ${m.action  ? `<div class="memo-line">🔗 ${m.action}</div>` : ''}
+    </div>
+  `).join('');
+}
+
+// ── GUIDE ─────────────────────────────────────────
+function renderGuide() {
+  document.getElementById('questionList').innerHTML = QUESTIONS.map((q,i)=>`
+    <div class="question-list-item">
+      <div class="q-num">${i+1}</div>
+      <div class="q-text">${q}</div>
+    </div>
+  `).join('');
+
+  document.getElementById('bookList').innerHTML = BOOKS.map(b=>`
+    <div class="book-row">
+      <div>
+        <div class="book-title">${b.title}</div>
+        <div class="book-author">${b.author}</div>
+      </div>
+      <div class="book-tag">${b.tag}</div>
+    </div>
+  `).join('');
+}
+
+// ── TABS ──────────────────────────────────────────
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── PWA INSTALL ───────────────────────────────────
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  setTimeout(() => document.getElementById('installBanner').classList.add('show'), 2000);
+});
+document.getElementById('installBtn').addEventListener('click', () => {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(() => {
+      deferredPrompt = null;
+      document.getElementById('installBanner').classList.remove('show');
+    });
+  } else {
+    // iOS fallback
+    alert('Safari에서: 하단 공유 버튼 → "홈 화면에 추가" 를 눌러주세요 📱');
+    document.getElementById('installBanner').classList.remove('show');
+  }
+});
+
+// ── SERVICE WORKER ────────────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(()=>{});
+}
+
+// ── INIT ──────────────────────────────────────────
+loadState();
+renderToday();
+renderWeek();
+renderMemos();
+renderGuide();
+</script>
+</body>
+</html>
