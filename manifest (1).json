@@ -1,0 +1,24 @@
+{
+  "name": "버핏 독서 트래커",
+  "short_name": "독서트래커",
+  "description": "워런 버핏식 독서 루틴 트래커",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0F0E0A",
+  "theme_color": "#C8A96E",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
